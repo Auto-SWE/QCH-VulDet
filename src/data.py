@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from datasets import load_dataset
+from datasets import Dataset, load_dataset
 
 
 def load_processed_dataset(
@@ -23,7 +23,7 @@ def load_processed_dataset(
 
     train = ds[train_split]
     validation = ds[eval_split]
-    test = ds[ŧest_split] if test_split and test_split in ds else None
+    test = ds[test_split] if test_split and test_split in ds else None
 
     for split_name, split in [(train_split, train), (eval_split, validation)]:
         missing_columns = {"text", "label"} - set(split.column_names)
@@ -54,7 +54,7 @@ def tokenize_splits(
     eval_subset: int | None = None,
 ):
     train = maybe_subset(train, train_subset)
-    validation = maybe_subset(vaidation, eval_subset)
+    validation = maybe_subset(validation, eval_subset)
 
     def tokenize_batch(batch):
         tokenized = tokenizer(
@@ -64,7 +64,7 @@ def tokenize_splits(
             padding=False,
         )
 
-        tokenized["labels"] = [int(x) for x in batch["labels"]]
+        tokenized["labels"] = [int(x) for x in batch["label"]]
 
         return tokenized
 
