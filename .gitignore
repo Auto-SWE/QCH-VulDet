@@ -8,3 +8,12 @@ wheels/
 
 # Virtual environments
 .venv
+
+# Local secrets for Docker Compose
+.env
+
+eval_outputs/
+local_outputs/
+outputs/
+configs/
+wandb/
