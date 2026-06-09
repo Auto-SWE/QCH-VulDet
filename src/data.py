@@ -5,11 +5,12 @@ from datasets import Dataset, load_dataset
 
 def load_processed_dataset(
     dataset_name: str,
+    dataset_config: str | None,
     train_split: str,
     eval_split: str,
     test_split: str | None,
 ):
-    ds = load_dataset(dataset_name)
+    ds = load_dataset(dataset_name, dataset_config)
     print(ds)
 
     required_splits = [train_split, eval_split]
