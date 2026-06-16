@@ -105,7 +105,7 @@ def add_split(
         dataset_dict[split_name] = dataset
 
 
-def print_stats(ds: DatasetDict) -> None:
+def print_stats(ds: DatasetDict, config_name: str) -> None:
     for split_name, split in ds.items():
         labels = [int(x) for x in split["label"]]
         total = len(labels)
@@ -114,7 +114,7 @@ def print_stats(ds: DatasetDict) -> None:
         pos_rate = pos / total if total else 0.0
 
         print(
-            f"{split_name}: n={total:,} "
+            f"{config_name}/{split_name}: n={total:,} "
             f"safe={neg:,} unsafe={pos:,} "
             f"unsafe_rate={pos_rate:.4f}"
         )
@@ -137,30 +137,39 @@ def main() -> None:
 
     args = parser.parse_args()
 
-    splits: dict[str, Dataset] = {}
+    default_splits: dict[str, Dataset] = {}
+    paired_splits: dict[str, Dataset] = {}
 
-    add_split(splits, "train", args.full_train, "full")
-    add_split(splits, "validation", args.full_validation, "full")
-    add_split(splits, "test", args.full_test, "full")
+    add_split(default_splits, "train", args.full_train, "full")
+    add_split(default_splits, "validation", args.full_validation, "full")
+    add_split(default_splits, "test", args.full_test, "full")
 
-    add_split(splits, "paired_train", args.paired_train, "paired")
-    add_split(splits, "paired_validation", args.paired_validation, "paired")
-    add_split(splits, "paired_test", args.paired_test, "paired")
+    add_split(paired_splits, "train", args.paired_train, "paired")
+    add_split(paired_splits, "validation", args.paired_validation, "paired")
+    add_split(paired_splits, "test", args.paired_test, "paired")
 
-    if not splits:
+    configs = {
+        "default": DatasetDict(default_splits) if default_splits else None,
+        "paired": DatasetDict(paired_splits) if paired_splits else None,
+    }
+    configs = {name: ds for name, ds in configs.items() if ds is not None}
+
+    if not configs:
         raise ValueError("No input split files were provided.")
 
-    ds = DatasetDict(splits)
-    print_stats(ds)
+    for config_name, ds in configs.items():
+        print_stats(ds, config_name)
 
     output_dir = Path(args.output_dir)
     output_dir.mkdir(parents=True, exist_ok=True)
 
-    ds.save_to_disk(str(output_dir))
+    for config_name, ds in configs.items():
+        ds.save_to_disk(str(output_dir / config_name))
     print(f"Saved dataset to {output_dir}")
 
     if args.repo_id:
-        ds.push_to_hub(args.repo_id, private=args.private)
+        for config_name, ds in configs.items():
+            ds.push_to_hub(args.repo_id, config_name=config_name, private=args.private)
         print(f"Uploaded to Hugging Face dataset repo: {args.repo_id}")
 
 

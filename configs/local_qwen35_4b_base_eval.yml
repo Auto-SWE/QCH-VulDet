@@ -1,0 +1,30 @@
+---
+model_name: Qwen/Qwen3.5-4B
+dataset_name: lukasjordan/qch-vuldet
+dataset_config: default
+
+train_split: train
+eval_split: validation
+test_split: test
+
+output_dir: eval_outputs/qwen35_4b_base
+
+max_length: 1024
+eval_subset: 1000
+
+per_device_eval_batch_size: 1
+
+use_qlora: true
+bf16: false
+fp16: true
+
+wandb:
+  enabled: false
+  entity: automating-swe
+  project: qch-vuldet
+  tags:
+    - local
+    - qwen
+    - 4b
+    - base
+    - eval
